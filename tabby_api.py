@@ -1,16 +1,19 @@
 import logging
 import requests
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
 logger = logging.getLogger(__name__)
 
 TABBY_CARD_LIMIT_URL = "https://api.tabby.ai/api/v2/customer/card/limit"
+DEFAULT_TIMEOUT = 30
 
 
-def modify_card_limit(customer_id: str, new_limit: float, bearer_token: str, reason: str = None) -> dict:
+def modify_card_limit(
+    customer_id: str,
+    new_limit: float,
+    bearer_token: str,
+    reason: str = None,
+    timeout: int = DEFAULT_TIMEOUT,
+) -> dict:
     """Modify the card limit for a Tabby customer.
 
     Args:
@@ -18,6 +21,7 @@ def modify_card_limit(customer_id: str, new_limit: float, bearer_token: str, rea
         new_limit: The new card limit to set for the customer.
         bearer_token: A valid Bearer token for API authorization.
         reason: An optional reason for changing the card limit.
+        timeout: Request timeout in seconds (default: 30).
 
     Returns:
         A dict with keys 'success' (bool), 'status_code' (int), and 'data' or 'error'.
@@ -52,7 +56,7 @@ def modify_card_limit(customer_id: str, new_limit: float, bearer_token: str, rea
     )
 
     try:
-        response = requests.post(TABBY_CARD_LIMIT_URL, json=payload, headers=headers, timeout=30)
+        response = requests.post(TABBY_CARD_LIMIT_URL, json=payload, headers=headers, timeout=timeout)
     except requests.exceptions.Timeout:
         logger.error("Request to Tabby API timed out.")
         return {"success": False, "status_code": None, "error": "Request timed out."}

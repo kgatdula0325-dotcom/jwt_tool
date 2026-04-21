@@ -71,12 +71,15 @@ def modify_card_limit(
     """
     if not customer_id or not customer_id.strip():
         raise ValueError("customer_id must not be empty.")
+    customer_id = customer_id.strip()
     if not isinstance(new_limit, (int, float)):
         raise ValueError("new_limit must be a number.")
     if math.isnan(new_limit) or math.isinf(new_limit) or new_limit < 0:
         raise ValueError("new_limit must be a finite non-negative number.")
     if not bearer_token or not bearer_token.strip():
         raise ValueError("bearer_token must not be empty.")
+    if not isinstance(timeout, (int, float)):
+        raise ValueError("timeout must be a number.")
     if timeout <= 0:
         raise ValueError("timeout must be greater than 0.")
 
@@ -86,7 +89,7 @@ def modify_card_limit(
     }
 
     payload: dict = {
-        "customer_id": customer_id.strip(),
+        "customer_id": customer_id,
         "limit": new_limit,
     }
     if reason is not None:

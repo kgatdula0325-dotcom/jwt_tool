@@ -78,6 +78,7 @@ def modify_card_limit(
         raise ValueError("new_limit must be a finite non-negative number.")
     if not bearer_token or not bearer_token.strip():
         raise ValueError("bearer_token must not be empty.")
+    bearer_token = bearer_token.strip()
     if not isinstance(timeout, (int, float)):
         raise ValueError("timeout must be a number.")
     if timeout <= 0:

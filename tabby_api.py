@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
 import math
+import os
+import sys
 from typing import Any, Optional, Union
 
 import requests
@@ -148,3 +151,40 @@ def modify_card_limit(
     logger.warning("Tabby API request failed: status_code=%s", status_code)
 
     return _error_result(message, status_code=status_code, details=response_data)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    bearer_token = os.environ.get("TABBY_BEARER_TOKEN", "").strip()
+    customer_id = os.environ.get("TABBY_CUSTOMER_ID", "").strip()
+    new_limit_raw = os.environ.get("TABBY_NEW_LIMIT", "").strip()
+    reason = os.environ.get("TABBY_REASON") or None
+
+    missing = []
+    if not bearer_token:
+        missing.append("TABBY_BEARER_TOKEN")
+    if not customer_id:
+        missing.append("TABBY_CUSTOMER_ID")
+    if not new_limit_raw:
+        missing.append("TABBY_NEW_LIMIT")
+
+    if missing:
+        print(f"ERROR: missing required environment variable(s): {', '.join(missing)}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        new_limit = float(new_limit_raw)
+    except ValueError:
+        print(f"ERROR: TABBY_NEW_LIMIT must be a number, got: {new_limit_raw!r}", file=sys.stderr)
+        sys.exit(1)
+
+    result = modify_card_limit(
+        customer_id=customer_id,
+        new_limit=new_limit,
+        bearer_token=bearer_token,
+        reason=reason,
+    )
+
+    print(json.dumps(result, indent=2))
+    sys.exit(0 if result.get("success") else 1)

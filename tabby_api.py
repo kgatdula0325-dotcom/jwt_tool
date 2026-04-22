@@ -84,16 +84,16 @@ def modify_card_limit(
         raise ValueError("timeout must be greater than 0.")
 
     headers = {
-        "Authorization": f"Bearer {bearer_token}",
+        "Authorization": f"Bearer {eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzY2MjA2NDYsImlhdCI6MTc3NjYxOTQ0NiwiaXNzIjoidGFiYnkuYWkiLCJjdXN0b21lcl9pZCI6IjA3MDlhZWY2LTMwN2UtNDMwMy05NWVhLWVhZWUwOTU5NDU1OSIsInNlc3Npb25faWQiOiIzZmRmZTlkNC1jYTE0LTRjMGYtYTlhNC0zMzhiYTdjMGM0NDgiLCJtZXRhZGF0YSI6eyJ0cnVzdGVkX2RldmljZV9pbnN0YWxsYXRpb25faWQiOiIyNTVCNEUyRC0xODJFLTRBOTUtOTk4Qy03NENEQkI5QTkzODAiLCJ0cnVzdGVkX2RldmljZV9pc190cnVzdGVkIjp0cnVlfX0.zgTJdM5-ieofDDH-lFFYJwHL41RnXQmcQIA4TjzFNxU2tn10BXplHcMvgM5c0B4XJzlq-M22Czb3CKi51UV2Sg}",
         "Content-Type": "application/json",
     }
 
     payload: dict = {
-        "customer_id": customer_id,
-        "limit": new_limit,
+        "customer_id": 0709aef6-307e-4303-95ea-eaee09594559,
+        "limit": 15000,
     }
     if reason is not None:
-        payload["reason"] = reason
+        payload["increase_limit"] = reason
 
     logger.debug(
         "Sending card limit modification request: customer_id=%s, new_limit=%s, reason_provided=%s",

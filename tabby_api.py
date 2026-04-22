@@ -1,150 +1,28 @@
-from __future__ import annotations
+import os
+import json
 
-import logging
-import math
-from typing import Any, Optional, Union
-
-import requests
-
-try:
-    from typing import TypedDict
-except ImportError:
-    from typing_extensions import TypedDict  # type: ignore[no-redef]
-
-logger = logging.getLogger(__name__)
+print("Script started")
 
 TABBY_CARD_LIMIT_URL = "https://api.tabby.ai/api/v2/customer/card/limit"
 DEFAULT_TIMEOUT = 30
 
+customer_id = os.getenv("0709aef6-307e-4303-95ea-eaee09594559")
+bearer_token = os.getenv("eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzY2MjA2NDYsImlhdCI6MTc3NjYxOTQ0NiwiaXNzIjoidGFiYnkuYWkiLCJjdXN0b21lcl9pZCI6IjA3MDlhZWY2LTMwN2UtNDMwMy05NWVhLWVhZWUwOTU5NDU1OSIsInNlc3Npb25faWQiOiIzZmRmZTlkNC1jYTE0LTRjMGYtYTlhNC0zMzhiYTdjMGM0NDgiLCJtZXRhZGF0YSI6eyJ0cnVzdGVkX2RldmljZV9pbnN0YWxsYXRpb25faWQiOiIyNTVCNEUyRC0xODJFLTRBOTUtOTk4Qy03NENEQkI5QTkzODAiLCJ0cnVzdGVkX2RldmljZV9pc190cnVzdGVkIjp0cnVlfX0.zgTJdM5-ieofDDH-lFFYJwHL41RnXQmcQIA4TjzFNxU2tn10BXplHcMvgM5c0B4XJzlq-M22Czb3CKi51UV2Sg")
+reason = os.getenv("TABBY_REASON", "limit_update")
+new_limit = float(os.getenv("TABBY_LIMIT", "15000"))
 
-class ModifyCardLimitResult(TypedDict, total=False):
-    success: bool
-    status_code: Optional[int]
-    data: Any
-    error: str
-    details: Any
-
-
-def _error_result(
-    message: str,
-    status_code: Optional[int] = None,
-    details: Any = None,
-) -> ModifyCardLimitResult:
-    result: ModifyCardLimitResult = {
-        "success": False,
-        "status_code": status_code,
-        "error": message,
-    }
-    if details is not None:
-        result["details"] = details
-    return result
-
-
-def modify_card_limit(
-    customer_id: str,
-    new_limit: float,
-    bearer_token: str,
-    reason: Optional[str] = None,
-    timeout: Union[int, float] = DEFAULT_TIMEOUT,
-    session: Optional[requests.Session] = None,
-) -> ModifyCardLimitResult:
-    """Modify the card limit for a Tabby customer.
-
-    Args:
-        customer_id: The unique identifier of the customer.
-        new_limit: The new card limit to set for the customer (non-negative finite number).
-        bearer_token: A valid Bearer token for API authorization.
-        reason: Optional reason for changing the card limit.
-        timeout: Request timeout in seconds (must be greater than 0).
-        session: Optional requests session for connection reuse and testing.
-
-    Returns:
-        A ModifyCardLimitResult with:
-          - success: Whether the request succeeded.
-          - status_code: HTTP status code if available.
-          - data: Parsed response body on success.
-          - error: Error message on failure.
-          - details: Parsed response body on failure, if available.
-
-    Raises:
-        ValueError: If inputs are invalid.
-    """
-    if not customer_id or not customer_id.strip():
-        raise ValueError("customer_id must not be empty.")
-    customer_id = customer_id.strip()
-    if not isinstance(new_limit, (int, float)):
-        raise ValueError("new_limit must be a number.")
-    if math.isnan(new_limit) or math.isinf(new_limit) or new_limit < 0:
-        raise ValueError("new_limit must be a finite non-negative number.")
-    if not bearer_token or not bearer_token.strip():
-        raise ValueError("bearer_token must not be empty.")
-    if not isinstance(timeout, (int, float)):
-        raise ValueError("timeout must be a number.")
-    if timeout <= 0:
-        raise ValueError("timeout must be greater than 0.")
-
-    headers = {
-        "Authorization": f"Bearer {eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzY2MjA2NDYsImlhdCI6MTc3NjYxOTQ0NiwiaXNzIjoidGFiYnkuYWkiLCJjdXN0b21lcl9pZCI6IjA3MDlhZWY2LTMwN2UtNDMwMy05NWVhLWVhZWUwOTU5NDU1OSIsInNlc3Npb25faWQiOiIzZmRmZTlkNC1jYTE0LTRjMGYtYTlhNC0zMzhiYTdjMGM0NDgiLCJtZXRhZGF0YSI6eyJ0cnVzdGVkX2RldmljZV9pbnN0YWxsYXRpb25faWQiOiIyNTVCNEUyRC0xODJFLTRBOTUtOTk4Qy03NENEQkI5QTkzODAiLCJ0cnVzdGVkX2RldmljZV9pc190cnVzdGVkIjp0cnVlfX0.zgTJdM5-ieofDDH-lFFYJwHL41RnXQmcQIA4TjzFNxU2tn10BXplHcMvgM5c0B4XJzlq-M22Czb3CKi51UV2Sg}",
+request_preview = {
+    "url": TABBY_CARD_LIMIT_URL,
+    "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzY2MjA2NDYsImlhdCI6MTc3NjYxOTQ0NiwiaXNzIjoidGFiYnkuYWkiLCJjdXN0b21lcl9pZCI6IjA3MDlhZWY2LTMwN2UtNDMwMy05NWVhLWVhZWUwOTU5NDU1OSIsInNlc3Npb25faWQiOiIzZmRmZTlkNC1jYTE0LTRjMGYtYTlhNC0zMzhiYTdjMGM0NDgiLCJtZXRhZGF0YSI6eyJ0cnVzdGVkX2RldmljZV9pbnN0YWxsYXRpb25faWQiOiIyNTVCNEUyRC0xODJFLTRBOTUtOTk4Qy03NENEQkI5QTkzODAiLCJ0cnVzdGVkX2RldmljZV9pc190cnVzdGVkIjp0cnVlfX0.zgTJdM5-ieofDDH-lFFYJwHL41RnXQmcQIA4TjzFNxU2tn10BXplHcMvgM5c0B4XJzlq-M22Czb3CKi51UV2Sg" if bearer_token else "Bearer MISSING",
         "Content-Type": "application/json",
-    }
+    },
+    "json": {
+        "customer_id": customer_id,
+        "new_limit": new_limit,
+        "reason": reason,
+    },
+    "timeout": DEFAULT_TIMEOUT,
+}
 
-    payload: dict = {
-        "customer_id": 0709aef6-307e-4303-95ea-eaee09594559,
-        "limit": 15000,
-    }
-    if reason is not None:
-        payload["increase_limit"] = reason
-
-    logger.debug(
-        "Sending card limit modification request: customer_id=%s, new_limit=%s, reason_provided=%s",
-        customer_id,
-        new_limit,
-        reason is not None,
-    )
-
-    client = session if session is not None else requests
-
-    try:
-        response = client.post(
-            TABBY_CARD_LIMIT_URL,
-            json=payload,
-            headers=headers,
-            timeout=timeout,
-        )
-    except requests.exceptions.Timeout:
-        logger.error("Request to Tabby API timed out.")
-        return _error_result("Request timed out.")
-    except requests.exceptions.ConnectionError as exc:
-        logger.error("Connection error when calling Tabby API: %s", exc)
-        return _error_result(f"Connection error: {exc}")
-    except requests.exceptions.RequestException as exc:
-        logger.error("Unexpected error when calling Tabby API: %s", exc)
-        return _error_result(f"Request error: {exc}")
-
-    status_code = response.status_code
-    logger.debug("Tabby API response received: status_code=%s", status_code)
-
-    try:
-        response_data = response.json()
-    except ValueError:
-        response_data = response.text
-
-    if 200 <= status_code < 300:
-        logger.info("Card limit successfully updated for customer_id=%s.", customer_id)
-        return {
-            "success": True,
-            "status_code": status_code,
-            "data": response_data,
-        }
-
-    error_map = {
-        400: "Bad request: The request contained invalid parameters.",
-        401: "Unauthorized: The Bearer token is missing or invalid.",
-        403: "Forbidden: Insufficient permissions to modify the card limit.",
-        422: "Unprocessable entity: The request data failed validation.",
-    }
-
-    message = error_map.get(status_code, f"Unexpected response with status code {status_code}.")
-    logger.warning("Tabby API request failed: status_code=%s", status_code)
-
-    return _error_result(message, status_code=status_code, details=response_data)
+print(json.dumps(request_preview, indent=2))
